@@ -1,0 +1,11 @@
+hello,你好;
+world,世界;
+nice,赞;
+test,测试;
+example,例如;
+everyone,每个人;
+meet,见面;
+go,走;
+to,去;
+here,这里;
+there,那里;

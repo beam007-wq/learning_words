@@ -1,0 +1,347 @@
+//common.c
+
+#include <panel.h>
+#include <ncurses.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdio.h>
+
+#include "common.h"
+
+struct Config_AST {
+	char name[20+1];
+	int name_index;
+
+	char sign;
+	struct {
+		char type;
+		int paramater_index;
+
+		union {
+			int number;
+			char paramater[20+1];
+		} value;	
+	} get_value;
+
+	char end;
+};
+
+enum Config_name {
+	BACKGROUND_COLOR = 0,
+	LANAGUAGE = 1,
+	LEARN_WORDS_NUMBER = 2,
+	REVIEW_WORDS_NUMBER = 3,
+};
+
+const char *vaild_keywords[4] = {
+	"background_color",
+	"language",
+	"learn_words_number",
+	"review_words_number"
+};
+
+WINDOW *create_window(const int height, const int width, const int starty, const int startx) {
+        if (height == 0 || width == 0 || startx < 0 || starty < 0) return NULL;
+
+        WINDOW *win = newwin(height,width,starty,startx);
+        if (win == NULL) return NULL; 
+
+        return win;
+}
+
+PANEL *create_panel(WINDOW *win) {
+	if (win == NULL) return NULL;
+
+	PANEL *panel = new_panel(win);
+	if (panel == NULL) return NULL;
+
+	return panel;
+}
+
+static bool check_paramater_name(const char *paramater_name) {
+	for (int i = 0; i < 4; i++) 
+		if (strcmp(paramater_name, vaild_keywords[i]) == 0) 
+			return true;
+
+	return false;
+}
+
+static bool check_paramater_value(const char *paramater_name, const void *value, const char type) {
+	const char *background_color[6] = {"red", "black", "blue", "green", "yellow"};
+	const char *language[2] = {"zh_CN", "en_US"};
+
+	int number = 0;
+	char paramater_value[20+1] = {'\0'};
+
+	if (type == 's')
+		snprintf(paramater_value, 20, "%s", (const char *)value);
+	else if (type == 'n')
+		number = *(int *)value;
+	else
+		return false;
+
+	if (strcmp(paramater_name, vaild_keywords[BACKGROUND_COLOR]) == 0 && type == 's') {
+		for (int i = 0; i < 6; i++) {
+			if (strcmp(paramater_value, background_color[i]) == 0)
+				return true;
+		}
+	} else if (strcmp(paramater_name, vaild_keywords[LANAGUAGE]) == 0 && type == 's') {
+		for (int i = 0; i < 2; i++) {
+			if (strcmp(paramater_value, language[i]) == 0)
+				return true;
+		}
+	} else if (strcmp(paramater_name, vaild_keywords[LEARN_WORDS_NUMBER]) == 0 && type == 'n') {
+		if (number > 0 && number < 20)
+			return true;	
+	} else if (strcmp(paramater_name, vaild_keywords[REVIEW_WORDS_NUMBER]) == 0 && type == 'n') {
+		if (number > 0 && number < 100)
+			return true;	
+	}	
+
+	return false;
+}
+
+static bool check_paramaters(const char *paramater_name, const void *value, const char type) {
+	if (!check_paramater_name(paramater_name) || !check_paramater_value(paramater_name, value, type))
+		return false;	
+
+	return true;
+}
+
+bool config_read(char *background_color,
+ 	       	 int background_color_length,
+	       	 char *language,
+	       	 int language_length,
+	       	 int *learn_words_number,
+	       	 int *review_words_number)
+	{
+	bool result = false;
+
+        FILE *read_config = fopen("../config", "r");
+        if (read_config == NULL) {
+                puts("Failed to find config file\n");
+                return false;
+        }
+
+	//init AST
+	struct Config_AST ast = {
+		0,
+	       	.name_index = 0,
+	       	.sign = '=',
+	       	.end = ';',
+	       	.get_value.paramater_index = 0
+	};
+
+	//read one row
+        char get_content[100] = {'\0'};
+        while (fgets(get_content, sizeof(get_content), read_config) != NULL) {
+		//read column
+		ast.get_value.paramater_index = 0;
+		ast.name_index = 0;
+		ast.name[0] = '\0';
+
+		char get_number[2+1] = {'\0'};
+
+		int get_content_length = strlen(get_content);
+		int get_number_index = 0;
+		int quote_sign = 0;
+		
+		bool equal_sign = false, is_number = false, is_quote = false;
+
+	       	for (int i = 0; i < get_content_length; i++) {
+			//check equal_sign
+			if (get_content[i] == ast.sign) {
+				equal_sign = true;
+				ast.name[ast.name_index] = '\0';
+				continue;
+			}
+
+			if (get_content[i] == '/')
+				break;
+
+			//check and write paramater name
+			if (isspace(get_content[i]) == 0 && equal_sign == false && ast.name_index < 19) {
+				ast.name[ast.name_index] = get_content[i];
+				ast.name_index++;	
+			} else if (isspace(get_content[i]) == 0 && equal_sign == true) {
+				//The loop that encounter semicolon to exit
+				if (get_content[i] == ast.end) {
+					ast.get_value.value.paramater[ast.get_value.paramater_index] = '\0';
+					get_number[get_number_index] = '\0';
+					break;
+				}
+				
+				//check type
+				if (isdigit(get_content[i])) {
+					ast.get_value.type = 'n';
+					is_number = true;
+				} else if (get_content[i] == '"') {
+					is_quote = true;
+					ast.get_value.type = 's';
+				}
+
+				//String check and write
+				if (get_content[i] == '"' && is_quote == true) {
+					quote_sign++;
+					continue;
+				} else if (quote_sign == 1 && is_quote== true && ast.get_value.paramater_index < 19) {
+					ast.get_value.value.paramater[ast.get_value.paramater_index] = get_content[i];
+					ast.get_value.paramater_index++;	
+				}
+
+				//number check and write
+				if (isdigit(get_content[i]) && is_number == true && get_number_index < 2) {
+					get_number[get_number_index] = get_content[i];
+					get_number_index++;
+				}
+			} else {
+				continue;
+			}
+
+		}	
+
+		if (get_number[0] != '\0')
+			ast.get_value.value.number = (int)strtol(get_number, NULL, 10);
+
+		if (ast.name[0] != '\0') {
+			if (!check_paramaters(ast.name, &ast.get_value.value, ast.get_value.type)) {
+				result = false;
+				break;
+			}
+
+			if (strcmp(ast.name, vaild_keywords[0]) == 0) {
+				snprintf(background_color, background_color_length, "%s", ast.get_value.value.paramater);
+				result = true;
+			} else if (strcmp(ast.name, vaild_keywords[1]) == 0) {
+				snprintf(language, language_length, "%s", ast.get_value.value.paramater);	
+				result = true;
+			} else if (strcmp(ast.name, vaild_keywords[2]) == 0) {
+				*learn_words_number = ast.get_value.value.number;
+				result = true;
+			} else if (strcmp(ast.name, vaild_keywords[3]) == 0) {
+				*review_words_number = ast.get_value.value.number;
+				result = true;
+			}	
+		}
+
+		get_content[0] = '\0';
+		ast.get_value.value.paramater[0] = '\0';
+		ast.get_value.value.number = 0;
+        }
+
+    fclose(read_config);
+
+	return result;
+}
+
+bool config_write(const char *paramater_name, const void *value, const char type) {
+	if (!check_paramaters(paramater_name, value, type)) {
+		puts("paramater invaild");
+		return false;
+	}
+
+	char content[10][30+1] = {0};
+		
+	//get content in config file
+	FILE *read_content = fopen("../config", "r");
+	if (read_content == NULL) {
+		puts("failed to open file");
+		return false;
+	}
+
+	int available = 0;
+	for (int i = 0; i < 10; i++) {
+		if(!fgets(content[i], sizeof(content[i]), read_content)) {
+			available = i;
+			break;
+		}
+	}
+
+	fclose(read_content);	
+
+	//find keyword which want to modify
+	int content_raw = 0;
+	for(int i = 0; i < 10; i++) {
+		const char *find_keyword = strstr(content[i], paramater_name);
+		if (find_keyword != NULL) {
+			content_raw = i;
+			break;
+		}
+	}	
+
+	//init value
+	char value_content[20+1] = {'\0'};
+	int value_number = 0, value_content_index = 0;
+	
+	if (type == 's')
+		snprintf(value_content, sizeof(value_content), "%s", (const char *)value);		
+	else if (type == 'n')
+		value_number = *(int *)value;	
+	else
+		return false;
+
+	//split paramater
+	char buffer[2][30+1] = {'\0'};
+	int content_index = 0, buffer_raw = 0, buffer_index = 0;
+	bool is_equal = false;
+
+	for (int i = 0; i < 30; i++) {
+		if(content[content_raw][i] == ';') {
+			buffer[buffer_raw][buffer_index] = ';'; 
+			break;
+		} else if(content[content_raw][i] == '=') {
+			buffer[buffer_raw][i] = '=';
+
+			is_equal = true;
+			buffer_raw++;
+			buffer_index = 0;
+		} else if (is_equal) {
+			buffer[buffer_raw][buffer_index] = value_content[value_content_index];
+			buffer_index++;
+			value_content_index++;
+		} else {
+			buffer[buffer_raw][buffer_index] = content[content_raw][i];	
+			buffer_index++;
+		}
+	}
+
+	//modify array content
+	if (type == 's') {
+		//write buffer
+		snprintf(buffer[1], sizeof(buffer[1]), "\"%s\";", value_content);
+
+		//write content
+		snprintf(content[content_raw], sizeof(content[content_raw]), "%s %s\n", buffer[0], buffer[1]);
+	} else if (type == 'n') {
+		snprintf(buffer[1], sizeof(buffer[1]), "%d;", value_number);
+
+		snprintf(content[content_raw], sizeof(content[content_raw]), "%s %s\n", buffer[0], buffer[1]);
+	} else {
+		puts("cannot modify array content");
+		return false;
+	}
+
+	//write content in file	
+	FILE *write_file = fopen("../config", "w");
+	if (write_file == NULL) {
+		puts("failed to open file");
+		return false;
+	}
+
+	for (int i = 0; i < available; i++) {
+		if (fputs(content[i], write_file) == EOF) {
+			puts("failed to write content");
+			return false;
+		}
+	}
+	
+	fclose(write_file);
+	
+
+	return true;
+}
+
+bool split_dictionary() {
+
+}
