@@ -38,11 +38,24 @@ static void draw_display_learn_number(WINDOW *win) {
 	wrefresh(win);
 }
 
-static void draw_learn_zone(WINDOW *win) {
+static void draw_learn_zone(WINDOW *win, char quiz[4][100], char words[20][100], char meaning[20][100]) {
 	if (win == NULL) return;
 
 	box(win,0,0);
 	mvwaddstr(win,0,0,"learn zone");
+
+	int random_word = rand() % 10;
+	random_option(meaning[random_word], random_word, meaning, quiz);
+
+	//word
+	mvwprintw(win, 2, 2, "%s", words[random_word]);
+
+	//options
+	mvwprintw(win, 5, 5, "1 %s", quiz[0]);
+	mvwprintw(win, 8, 5, "2 %s", quiz[1]);
+	mvwprintw(win, 11, 5, "3 %s", quiz[2]);
+	mvwprintw(win, 14, 5, "4 %s", quiz[3]);
+
 	wrefresh(win);
 }
 
@@ -66,33 +79,15 @@ void access_learn(const char *dictionary_file_path) {
 	if (!split_dictionary(content, words, words_index, meaning, meaning_index))
 		return;
 
-	char quiz_word[100] = {0};
-	char quiz[4][100] = {0};
-
 	if (learn_title != NULL) {
 		draw_learn_title(learn_title);
 		draw_display_learn_number(display_number);
 
+		char quiz[4][100] = {0};
 		int select = 0;
 		while (1) {
-			draw_learn_zone(learn_zone);
-
-			/*
-						
-			//options
-			mvwprintw(learn_zone, 5, 5, "1 %s", quiz[0]);
-			mvwprintw(learn_zone, 8, 5, "2 %s", quiz[1]);
-			mvwprintw(learn_zone, 11, 5, "3 %s", quiz[2]);
-			mvwprintw(learn_zone, 14, 5, "4 %s", quiz[3]);
-			*/
-
-			int random_word = rand() % 4;
-			//word
-			mvwprintw(learn_zone, 2, 2, "%s", words[random_word]);
-			
-			
-
-			wrefresh(learn_zone);
+			werase(learn_zone);
+			draw_learn_zone(learn_zone, quiz, words, meaning);
 
 			int key = wgetch(learn_zone);
 
@@ -107,9 +102,6 @@ void access_learn(const char *dictionary_file_path) {
 			} else if (key == 'q') {
 				break;
 			}
-			
-			printw("%s", meaning[select]);
-			refresh();
 		}
 	}
 

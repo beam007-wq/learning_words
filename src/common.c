@@ -383,3 +383,25 @@ bool split_dictionary(char content[20][100], char word[20][100], int word_index,
 
 	return true;
 }
+
+void random_option(const char *correct, const int correct_num, char meaning[20][100], char quiz[4][100]) {
+	int correct_random_num = rand() % 4;
+	snprintf(quiz[correct_random_num], 100, "%s", correct);
+
+	int last_random_num = -1;
+	int i = 0;
+	while (i < 3) {
+		int random_num = rand() % 10;
+		
+		if (i == correct_random_num) {
+			i++;
+			continue;
+		}
+
+		if (random_num != last_random_num && random_num != correct_random_num && random_num != correct_num) {
+			last_random_num = random_num;
+			snprintf(quiz[i], 100, "%s", meaning[random_num]);
+			i++;
+		}
+	}	
+}
