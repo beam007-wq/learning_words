@@ -39,7 +39,7 @@ void access_review() {
 	const int review_zone_height = 20, review_zone_width = 80, review_zone_starty = 10, review_zone_startx = 25;
 	WINDOW *review_zone = create_window(review_zone_height, review_zone_width, review_zone_starty, review_zone_startx);
 
-	if (review_title != NULL) {
+	if (review_title != NULL && display_number != NULL && review_zone != NULL) {
 		draw_review_title(review_title);	
 		draw_display_review_number(display_number);
 		draw_review_zone(review_zone);

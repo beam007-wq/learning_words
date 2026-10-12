@@ -2,6 +2,7 @@
 
 #include <panel.h>
 #include <ncurses.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
@@ -21,7 +22,7 @@ struct Config_AST {
 		union {
 			int number;
 			char paramater[20+1];
-		} value;	
+		} value;
 	} get_value;
 
 	char end;
@@ -32,6 +33,15 @@ struct Split {
 	char end;
 };
 
+/*
+struct Word_link_list {
+	const char *word;
+	const char *meaning;
+	int correct_times;
+	struct Word_link_list *next;
+};
+*/
+
 enum Config_name {
 	BACKGROUND_COLOR = 0,
 	LANAGUAGE = 1,
@@ -39,7 +49,7 @@ enum Config_name {
 	REVIEW_WORDS_NUMBER = 3,
 };
 
-const char *vaild_keywords[4] = {
+const char *valid_keywords[4] = {
 	"background_color",
 	"language",
 	"learn_words_number",
@@ -50,7 +60,7 @@ WINDOW *create_window(const int height, const int width, const int starty, const
         if (height == 0 || width == 0 || startx < 0 || starty < 0) return NULL;
 
         WINDOW *win = newwin(height,width,starty,startx);
-        if (win == NULL) return NULL; 
+        if (win == NULL) return NULL;
 
         return win;
 }
@@ -65,8 +75,8 @@ PANEL *create_panel(WINDOW *win) {
 }
 
 static bool check_paramater_name(const char *paramater_name) {
-	for (int i = 0; i < 4; i++) 
-		if (strcmp(paramater_name, vaild_keywords[i]) == 0) 
+	for (int i = 0; i < 4; i++)
+		if (strcmp(paramater_name, valid_keywords[i]) == 0)
 			return true;
 
 	return false;
@@ -86,30 +96,30 @@ static bool check_paramater_value(const char *paramater_name, const void *value,
 	else
 		return false;
 
-	if (strcmp(paramater_name, vaild_keywords[BACKGROUND_COLOR]) == 0 && type == 's') {
+	if (strcmp(paramater_name, valid_keywords[BACKGROUND_COLOR]) == 0 && type == 's') {
 		for (int i = 0; i < 6; i++) {
 			if (strcmp(paramater_value, background_color[i]) == 0)
 				return true;
 		}
-	} else if (strcmp(paramater_name, vaild_keywords[LANAGUAGE]) == 0 && type == 's') {
+	} else if (strcmp(paramater_name, valid_keywords[LANAGUAGE]) == 0 && type == 's') {
 		for (int i = 0; i < 2; i++) {
 			if (strcmp(paramater_value, language[i]) == 0)
 				return true;
 		}
-	} else if (strcmp(paramater_name, vaild_keywords[LEARN_WORDS_NUMBER]) == 0 && type == 'n') {
+	} else if (strcmp(paramater_name, valid_keywords[LEARN_WORDS_NUMBER]) == 0 && type == 'n') {
 		if (number > 0 && number < 20)
-			return true;	
-	} else if (strcmp(paramater_name, vaild_keywords[REVIEW_WORDS_NUMBER]) == 0 && type == 'n') {
+			return true;
+	} else if (strcmp(paramater_name, valid_keywords[REVIEW_WORDS_NUMBER]) == 0 && type == 'n') {
 		if (number > 0 && number < 100)
-			return true;	
-	}	
+			return true;
+	}
 
 	return false;
 }
 
 static bool check_paramaters(const char *paramater_name, const void *value, const char type) {
 	if (!check_paramater_name(paramater_name) || !check_paramater_value(paramater_name, value, type))
-		return false;	
+		return false;
 
 	return true;
 }
@@ -151,7 +161,7 @@ bool config_read(char *background_color,
 		int get_content_length = strlen(get_content);
 		int get_number_index = 0;
 		int quote_sign = 0;
-		
+
 		bool equal_sign = false, is_number = false, is_quote = false;
 
 	       	for (int i = 0; i < get_content_length; i++) {
@@ -168,7 +178,7 @@ bool config_read(char *background_color,
 			//check and write paramater name
 			if (isspace(get_content[i]) == 0 && equal_sign == false && ast.name_index < 19) {
 				ast.name[ast.name_index] = get_content[i];
-				ast.name_index++;	
+				ast.name_index++;
 			} else if (isspace(get_content[i]) == 0 && equal_sign == true) {
 				//The loop that encounter semicolon to exit
 				if (get_content[i] == ast.end) {
@@ -176,7 +186,7 @@ bool config_read(char *background_color,
 					get_number[get_number_index] = '\0';
 					break;
 				}
-				
+
 				//check type
 				if (isdigit(get_content[i])) {
 					ast.get_value.type = 'n';
@@ -192,7 +202,7 @@ bool config_read(char *background_color,
 					continue;
 				} else if (quote_sign == 1 && is_quote== true && ast.get_value.paramater_index < 19) {
 					ast.get_value.value.paramater[ast.get_value.paramater_index] = get_content[i];
-					ast.get_value.paramater_index++;	
+					ast.get_value.paramater_index++;
 				}
 
 				//number check and write
@@ -204,7 +214,7 @@ bool config_read(char *background_color,
 				continue;
 			}
 
-		}	
+		}
 
 		if (get_number[0] != '\0')
 			ast.get_value.value.number = (int)strtol(get_number, NULL, 10);
@@ -215,19 +225,19 @@ bool config_read(char *background_color,
 				break;
 			}
 
-			if (strcmp(ast.name, vaild_keywords[0]) == 0) {
+			if (strcmp(ast.name, valid_keywords[BACKGROUND_COLOR]) == 0) {
 				snprintf(background_color, background_color_length, "%s", ast.get_value.value.paramater);
 				result = true;
-			} else if (strcmp(ast.name, vaild_keywords[1]) == 0) {
-				snprintf(language, language_length, "%s", ast.get_value.value.paramater);	
+			} else if (strcmp(ast.name, valid_keywords[LANAGUAGE]) == 0) {
+				snprintf(language, language_length, "%s", ast.get_value.value.paramater);
 				result = true;
-			} else if (strcmp(ast.name, vaild_keywords[2]) == 0) {
+			} else if (strcmp(ast.name, valid_keywords[LEARN_WORDS_NUMBER]) == 0) {
 				*learn_words_number = ast.get_value.value.number;
 				result = true;
-			} else if (strcmp(ast.name, vaild_keywords[3]) == 0) {
+			} else if (strcmp(ast.name, valid_keywords[REVIEW_WORDS_NUMBER]) == 0) {
 				*review_words_number = ast.get_value.value.number;
 				result = true;
-			}	
+			}
 		}
 
 		get_content[0] = '\0';
@@ -247,7 +257,7 @@ bool config_write(const char *paramater_name, const void *value, const char type
 	}
 
 	char content[10][30+1] = {0};
-		
+
 	//get content in config file
 	FILE *read_content = fopen("../config", "r");
 	if (read_content == NULL) {
@@ -263,7 +273,7 @@ bool config_write(const char *paramater_name, const void *value, const char type
 		}
 	}
 
-	fclose(read_content);	
+	fclose(read_content);
 
 	//find keyword which want to modify
 	int content_raw = 0;
@@ -273,16 +283,16 @@ bool config_write(const char *paramater_name, const void *value, const char type
 			content_raw = i;
 			break;
 		}
-	}	
+	}
 
 	//init value
 	char value_content[20+1] = {'\0'};
 	int value_number = 0, value_content_index = 0;
-	
+
 	if (type == 's')
-		snprintf(value_content, sizeof(value_content), "%s", (const char *)value);		
+		snprintf(value_content, sizeof(value_content), "%s", (const char *)value);
 	else if (type == 'n')
-		value_number = *(int *)value;	
+		value_number = *(int *)value;
 	else
 		return false;
 
@@ -293,7 +303,7 @@ bool config_write(const char *paramater_name, const void *value, const char type
 
 	for (int i = 0; i < 30; i++) {
 		if(content[content_raw][i] == ';') {
-			buffer[buffer_raw][buffer_index] = ';'; 
+			buffer[buffer_raw][buffer_index] = ';';
 			break;
 		} else if(content[content_raw][i] == '=') {
 			buffer[buffer_raw][i] = '=';
@@ -306,7 +316,7 @@ bool config_write(const char *paramater_name, const void *value, const char type
 			buffer_index++;
 			value_content_index++;
 		} else {
-			buffer[buffer_raw][buffer_index] = content[content_raw][i];	
+			buffer[buffer_raw][buffer_index] = content[content_raw][i];
 			buffer_index++;
 		}
 	}
@@ -327,7 +337,7 @@ bool config_write(const char *paramater_name, const void *value, const char type
 		return false;
 	}
 
-	//write content in file	
+	//write content in file
 	FILE *write_file = fopen("../config", "w");
 	if (write_file == NULL) {
 		puts("failed to open file");
@@ -340,21 +350,21 @@ bool config_write(const char *paramater_name, const void *value, const char type
 			return false;
 		}
 	}
-	
+
 	fclose(write_file);
-	
+
 
 	return true;
 }
 
 bool split_dictionary(char content[20][100], char word[20][100], int word_index, char meaning[20][100], int meaning_index) {
-	if (content == NULL || word == NULL || meaning == NULL) 
+	if (content == NULL || word == NULL || meaning == NULL)
 		return false;
 
 	struct Split split_content = {
-		.sign = ',', 
+		.sign = ',',
 		.end = ';'
-	};	
+	};
 
 	bool sign = false;
 	for (int i = 0; i < 20; i++) {
@@ -379,29 +389,131 @@ bool split_dictionary(char content[20][100], char word[20][100], int word_index,
 		sign = false;
 		meaning_index = 0;
 		word_index = 0;
-	}	
+	}
 
 	return true;
 }
 
-void random_option(const char *correct, const int correct_num, char meaning[20][100], char quiz[4][100]) {
+int random_number(int **last_random_number) {
+	while (true) {
+		int number = rand() % 4;
+
+		if (number != **last_random_number) {
+			**last_random_number = number;
+			return number;
+		}
+	}
+}
+
+void random_option(const char *correct_meaning, const char meaning[20][100], char quiz[4][100]) {
 	int correct_random_num = rand() % 4;
-	snprintf(quiz[correct_random_num], 100, "%s", correct);
+	snprintf(quiz[correct_random_num], 100, "%s", correct_meaning);
 
 	int last_random_num = -1;
 	int i = 0;
-	while (i < 3) {
+	while (i <= 3) {
 		int random_num = rand() % 10;
-		
+
 		if (i == correct_random_num) {
 			i++;
 			continue;
 		}
 
-		if (random_num != last_random_num && random_num != correct_random_num && random_num != correct_num) {
+		if (random_num != last_random_num && strcmp(correct_meaning, meaning[random_num]) != 0) {
 			last_random_num = random_num;
 			snprintf(quiz[i], 100, "%s", meaning[random_num]);
 			i++;
 		}
-	}	
+	}
+}
+
+struct Word_link_list *init_word(const int id, const char *word, const char *meaning, struct Word_link_list *node) {
+	if (word == NULL || meaning == NULL)
+		return NULL;
+
+	struct Word_link_list *new_node = (struct Word_link_list *)malloc(sizeof(struct Word_link_list));
+	if (new_node == NULL)
+		return NULL;
+
+	new_node->id = id;
+	new_node->word = word;
+	new_node->meaning = meaning;
+	new_node->correct_times = 1;
+	new_node->next = NULL;
+
+	if (node == NULL)
+		return new_node;
+
+	struct Word_link_list *head = node;
+
+	if (node->next == NULL) {
+		node->next = new_node;
+		new_node->next = head;
+		return node;
+	}
+
+	struct Word_link_list *temp = node;
+
+	while (temp->next != head)
+		temp = temp->next;
+
+	temp->next = new_node;
+	new_node->next = head;
+
+	return node;
+}
+
+struct Word_link_list *remove_node(struct Word_link_list *n, const int id) {
+	struct Word_link_list *temp = n;
+	struct Word_link_list *head = n;
+	
+	if (n->next == head && n->next->id == id) {
+		free(temp);
+		return NULL;
+	}
+	
+	if (id == head->id)	{
+		struct Word_link_list *tail = n;
+		while (tail->next != head)
+			tail = tail->next;
+			
+		struct Word_link_list *next_head = head->next;
+		tail->next = next_head;	
+		free(head);
+
+		return next_head;
+	}
+
+	struct Word_link_list *prev = temp;
+
+	while (temp->next != head) {
+		struct Word_link_list *next = temp->next;
+		if (temp->id == id) {
+			prev->next = next;
+			free(temp);
+			return n;
+		}
+
+		prev = temp;
+		temp = next;
+	}
+
+	return n;
+}
+
+void free_link_list(struct Word_link_list *n) {
+	struct Word_link_list *head = n;
+	struct Word_link_list *tail = n;
+
+	while (tail->next != head)
+		tail = tail->next;
+	tail->next = NULL;
+
+	struct Word_link_list *temp = n;
+
+	while (temp) {
+		struct Word_link_list *next = temp->next;
+		free(temp);
+		temp = next;
+	}
 }

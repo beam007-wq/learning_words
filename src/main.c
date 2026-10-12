@@ -103,7 +103,7 @@ int main() {
 				
 				switch (select) {
 					case 0:
-						access_learn(internal_dictionary_file_path);
+						access_learn(learn_words_number, internal_dictionary_file_path);
 						break;
 					case 1:
 						access_review();

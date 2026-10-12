@@ -1,5 +1,5 @@
 main: main.o setting.o review.o learn.o set_dictionary.o common.o
-	zig cc -g ../build/main.o ../build/setting.o ../build/review.o ../build/learn.o ../build/set_dictionary.o ../build/common.o -o ~/Documents/learning_english_words/bin/main -lncursesw -lpanelw
+	zig cc -g ../build/main.o ../build/setting.o ../build/review.o ../build/learn.o ../build/set_dictionary.o ../build/common.o -o ~/Documents/learning_words/bin/main -lncursesw -lpanelw
 
 main.o: main.c setting.h common.h review.h learn.h set_dictionary.h
 	zig cc -c main.c -o ../build/main.o
