@@ -1,6 +1,6 @@
 <h1>Learning words core Beta(temporary name)</h1>
 
-<a href="https://github.com/beam007-wq/learning_words/blob/main/readme.md">Englih</a>
+<a href="https://github.com/beam007-wq/learning_words/blob/main/readme.md">English</a>
 
 <a href="https://github.com/beam007-wq/learning_words/tree/main/docs/readme_CH.md">中文</a>
 
