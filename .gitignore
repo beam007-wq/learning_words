@@ -1,0 +1,4 @@
+build/
+test/test_build/
+bin/
+*.bak
