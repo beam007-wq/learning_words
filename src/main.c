@@ -106,7 +106,7 @@ int main() {
 						access_learn(learn_words_number, internal_dictionary_file_path);
 						break;
 					case 1:
-						access_review();
+						access_review(review_words_number);
 						break;
 					case 2:
 						access_set_dictionary(

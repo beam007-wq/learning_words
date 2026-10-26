@@ -394,17 +394,6 @@ bool split_dictionary(char content[20][100], char word[20][100], int word_index,
 	return true;
 }
 
-int random_number(int **last_random_number) {
-	while (true) {
-		int number = rand() % 4;
-
-		if (number != **last_random_number) {
-			**last_random_number = number;
-			return number;
-		}
-	}
-}
-
 void random_option(const char *correct_meaning, const char meaning[20][100], char quiz[4][100]) {
 	int correct_random_num = rand() % 4;
 	snprintf(quiz[correct_random_num], 100, "%s", correct_meaning);

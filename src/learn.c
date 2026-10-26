@@ -40,14 +40,13 @@ static void draw_display_learn_number(WINDOW *win, int number) {
 	wrefresh(win);
 }
 
-static void draw_learn_zone(WINDOW *win, Word *w, char quiz[4][100], char words[20][100], char meaning[20][100], int *last_random_num) {
+static void draw_learn_zone(WINDOW *win, Word *w, char quiz[4][100], char words[20][100], char meaning[20][100]) {
 	if (win == NULL && w == NULL) return;
 
 	box(win,0,0);
 	mvwaddstr(win,0,0,"learn zone");
 	mvwprintw(win,2,10,"%d", w->correct_times - 1);
 
-	int random_word = random_number(&last_random_num);
 	random_option(w->meaning, meaning, quiz);
 	//word
 	mvwprintw(win, 2, 2, "%s", w->word);
@@ -71,13 +70,11 @@ static bool check_option(const Word *word, const int select, const char quiz[4][
         return false;
 }
 
-Word *load_words(const int learn_word_number, const char words[20][100], const char meaning[20][100], int *last_random_num) {
+static Word *load_words(const int learn_word_number, const char words[20][100], const char meaning[20][100]) {
     Word *word = NULL;
 
     for (int i = 0; i < learn_word_number; i++) {
-        int random_word = random_number(&last_random_num);
-
-        word = init_word(i, words[random_word], meaning[random_word], word);
+        word = init_word(i, words[i], meaning[i], word);
         if (word == NULL)
             return NULL;
     }
@@ -104,21 +101,24 @@ void access_learn(const int learn_word_number, const char *dictionary_file_path)
 	int meaning_index = 0;
 	if (!split_dictionary(content, words, words_index, meaning, meaning_index))
 		return;
-
-
+	
 	if (learn_title != NULL && display_number != NULL && learn_zone != NULL) {
+
 		draw_learn_title(learn_title);
 
 		char quiz[4][100] = {0};
 		int select = 0;
-		int last_random_num = -1;
 		int word_number = learn_word_number;
 
-		Word *word = load_words(learn_word_number, words, meaning, &last_random_num);
+		Word *word = load_words(learn_word_number, words, meaning);
 		if (word == NULL)
 		    return;
 
 		while (1) {
+			FILE *review_cache = fopen("../cache/review.txt", "a+");
+			if (review_cache == NULL)
+				return;
+
 			werase(learn_zone);
 			werase(display_number);
 
@@ -126,10 +126,15 @@ void access_learn(const int learn_word_number, const char *dictionary_file_path)
 			    break;
 
 			draw_display_learn_number(display_number, word_number);
-			draw_learn_zone(learn_zone, word, quiz, words, meaning, &last_random_num);
+			draw_learn_zone(learn_zone, word, quiz, words, meaning);
 
 			if (word->correct_times > 2) {
-			    word = remove_node(word, word->id);
+				char content[100] = {0};
+				snprintf(content, sizeof(content), "%s,%s;\n", word->word, word->meaning);
+				if (fputs(content, review_cache) == EOF)
+					return;
+				fclose(review_cache);
+				word = remove_node(word, word->id);
 				word_number--;
 			}
 

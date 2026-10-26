@@ -15,7 +15,6 @@ bool config_read(char *background_color,
 
 bool config_write(const char *paramater_name, const void *value, const char type);
 bool split_dictionary(char content[20][100], char word[20][100], int word_index, char meaning[20][100], int meaning_index);
-int random_number(int **last_random_number);
 void random_option(const char *correct, const char meaning[20][100], char quiz[4][100]);
 
 typedef struct Word_link_list {

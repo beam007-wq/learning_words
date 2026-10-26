@@ -1,4 +1,4 @@
-background_color = "green";
+background_color = "blue";
 language = "en_US";
 learn_words_number = 10;
 review_words_number = 10;
