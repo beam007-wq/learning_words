@@ -11,30 +11,50 @@
 #include "set_dictionary.h"
 #include "setting.h"
 
-void draw_title(WINDOW *win);
-void draw_menu(WINDOW *win);
-void draw_dictionary(WINDOW *win, char file_name[15+1]);
+void draw_dictionary(WINDOW *win, char file_name[15+1]) {
+	if (win == NULL) return;
+
+	box(win,0,0);
+	mvwaddstr(win,1,3,"You're learning:");		
+	mvwprintw(win,1,20,"%s", file_name);
+	wrefresh(win);
+}
+
+void draw_title(WINDOW *win) {
+	if (win == NULL) return;
+
+	box(win,0,0);
+	mvwaddstr(win,1,29,"Learning English words");
+	wrefresh(win);
+}
+
+void draw_menu(WINDOW *win) {
+	if (win == NULL) return;
+
+	box(win,0,0);
+	mvwaddstr(win,1,19,"Learn");
+	mvwaddstr(win,3,19,"Review");
+	mvwaddstr(win,5,19,"Set dictionary");
+	mvwaddstr(win,7,19,"Setting");
+	wrefresh(win);
+}
 
 int main() {
 	setlocale(LC_ALL,"");
 
-	char background_color[20+1] = {'\0'};
-	int background_color_length = 20; 
-
-	char language[20+1] = {'\0'};
-	int language_length = 20;
-
+	char *background_color = NULL;
+	char *language = NULL;
 	int learn_words_number = 0;
 	int review_words_number = 0;
 
 	//config_init read config file
-	if (config_read(background_color, background_color_length, language, language_length, &learn_words_number, &review_words_number) == false) {
+	if (config_read(&background_color, &language, &learn_words_number, &review_words_number) == false) {
 		puts("Config syntax is invaild\n");
 		return 1;
 	}
 
 	initscr();
-	//curs_set(0);
+	curs_set(0);
 	start_color();
 
 	use_default_colors();
@@ -124,41 +144,12 @@ int main() {
 				break;
 			}
 		}
+		delwin(title);
+		delwin(dictionary);
+		delwin(menu);
 	}	
-
-	delwin(title);
-	delwin(dictionary);
-	delwin(menu);
 
 	endwin();
 
 	return 0;
-}
-
-void draw_dictionary(WINDOW *win, char file_name[15+1]) {
-	if (win == NULL) return;
-
-	box(win,0,0);
-	mvwaddstr(win,1,3,"You're learning:");		
-	mvwprintw(win,1,20,"%s", file_name);
-	wrefresh(win);
-}
-
-void draw_title(WINDOW *win) {
-	if (win == NULL) return;
-
-	box(win,0,0);
-	mvwaddstr(win,1,29,"Learning English words");
-	wrefresh(win);
-}
-
-void draw_menu(WINDOW *win) {
-	if (win == NULL) return;
-
-	box(win,0,0);
-	mvwaddstr(win,1,19,"Learn");
-	mvwaddstr(win,3,19,"Review");
-	mvwaddstr(win,5,19,"Set dictionary");
-	mvwaddstr(win,7,19,"Setting");
-	wrefresh(win);
 }

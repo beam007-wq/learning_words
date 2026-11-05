@@ -236,7 +236,7 @@ void access_setting(int *learn_words_number, int *review_words_number) {
 	WINDOW *background_color_window = create_window(background_color_height,background_color_width,background_color_starty,background_color_startx);
 	PANEL *background_color = create_panel(background_color_window);
 
-	if (setting_title != NULL && setting_menu != NULL) {
+	if (setting_title != NULL && setting_menu != NULL && learning_setting != NULL && language != NULL && background_color != NULL) {
 		int setting_select = 0, setting_index = 1;
 
 		while (1) {	
@@ -280,15 +280,16 @@ void access_setting(int *learn_words_number, int *review_words_number) {
 				break;
 			}
 		}
+		
+		clear();
+		refresh();
+
+		del_panel(learning_setting);
+		del_panel(language);
+		del_panel(background_color);
+		del_panel(setting_menu);
+
+		delwin(setting_title);
 	}
 
-	clear();
-	refresh();
-
-	del_panel(learning_setting);
-	del_panel(language);
-	del_panel(background_color);
-	del_panel(setting_menu);
-
-	delwin(setting_title);
 }

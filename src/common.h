@@ -6,16 +6,24 @@
 WINDOW *create_window(const int height, const int width, const int starty, const int startx);
 PANEL *create_panel(WINDOW *win);
 
-bool config_read(char *background_color,
-                 int background_color_length,
-                 char *language,
-                 int language_length,
-                 int *learn_words_number,
-                 int *review_words_number);
+bool config_read(char **background_color, char **language, int *learn_words_number, int *review_words_number);
+
+
+typedef struct {
+	char *content;
+
+	int row_index;
+	int column_index;
+
+	int row_size;
+	int column_size;
+} Content;
 
 bool config_write(const char *paramater_name, const void *value, const char type);
-bool split_dictionary(char content[20][100], char word[20][100], int word_index, char meaning[20][100], int meaning_index);
-void random_option(const char *correct, const char meaning[20][100], char quiz[4][100]);
+bool split_dictionary(Content *content, Content *word, Content *meaning);
+void random_option(const char *correct_meaning, Content *meaning, char quiz[4][100]);
+
+Content *get_file_content(const char *path);
 
 typedef struct Word_link_list {
     int id;
@@ -25,6 +33,8 @@ typedef struct Word_link_list {
    	struct Word_link_list *next;
 } Word;
 
+
+Word *load_words(const int learn_word_number, Content *words, Content *meaning);
 Word *init_word(const int id, const char *word, const char *meaning, struct Word_link_list *node);
 Word *remove_node( struct Word_link_list *n, const int id);
 void free_link_list(struct Word_link_list *n);

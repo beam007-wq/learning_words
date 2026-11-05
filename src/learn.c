@@ -3,25 +3,10 @@
 #include <ncurses.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "common.h"
 #include "learn.h"
-
-static bool read_dictionary(const char *dictionary_file_path, char content[20][100], int content_index) {
-	if (dictionary_file_path == NULL)
-		return false;
-
-	FILE *read_content = fopen(dictionary_file_path, "r");
-	if (read_content == NULL)
-		return false;
-
-	while (fgets(content[content_index], sizeof(content[content_index]), read_content))
-		content_index++;
-
-	fclose(read_content);
-
-	return true;
-}
 
 static void draw_learn_title(WINDOW *win) {
 	if (win == NULL) return;
@@ -40,7 +25,7 @@ static void draw_display_learn_number(WINDOW *win, int number) {
 	wrefresh(win);
 }
 
-static void draw_learn_zone(WINDOW *win, Word *w, char quiz[4][100], char words[20][100], char meaning[20][100]) {
+static void draw_learn_zone(WINDOW *win, Word *w, char quiz[4][100], Content *meaning) {
 	if (win == NULL && w == NULL) return;
 
 	box(win,0,0);
@@ -70,18 +55,6 @@ static bool check_option(const Word *word, const int select, const char quiz[4][
         return false;
 }
 
-static Word *load_words(const int learn_word_number, const char words[20][100], const char meaning[20][100]) {
-    Word *word = NULL;
-
-    for (int i = 0; i < learn_word_number; i++) {
-        word = init_word(i, words[i], meaning[i], word);
-        if (word == NULL)
-            return NULL;
-    }
-
-    return word;
-}
-
 void access_learn(const int learn_word_number, const char *dictionary_file_path) {
 	const int learn_title_height = 3, learn_title_width = 80, learn_title_starty = 0, learn_title_startx = 25;
 	WINDOW *learn_title = create_window(learn_title_height, learn_title_width, learn_title_starty, learn_title_startx);
@@ -91,26 +64,41 @@ void access_learn(const int learn_word_number, const char *dictionary_file_path)
 	const int learn_zone_height = 20, learn_zone_width = 80, learn_zone_starty = 10, learn_zone_startx = 25;
 	WINDOW *learn_zone = create_window(learn_zone_height, learn_zone_width, learn_zone_starty, learn_zone_startx);
 
-	char content[20][100] = {0};
-	int content_index = 0;
-	if (!read_dictionary(dictionary_file_path, content, content_index))
+	Content *content = get_file_content(dictionary_file_path);
+	if (content == NULL)
 		return;
-	char words[20][100] = {0};
-	int words_index = 0;
-	char meaning[20][100] = {0};
-	int meaning_index = 0;
-	if (!split_dictionary(content, words, words_index, meaning, meaning_index))
+
+	Content words = {
+		.column_index = 0,
+		.row_index = 0,
+		.column_size = 5,
+		.row_size = 1,
+	};
+	words.content = (char *)malloc(words.row_size * words.column_size);
+	if (words.content == NULL)
+		return;
+
+	Content meaning = {
+		.column_index = 0,
+		.row_index = 0,
+		.column_size = 5,
+		.row_size = 1,
+	};
+	meaning.content = (char *)malloc(meaning.row_size * meaning.column_size);
+	if (meaning.content == NULL)
+		return;
+	
+	if (!split_dictionary(content, &words, &meaning))
 		return;
 	
 	if (learn_title != NULL && display_number != NULL && learn_zone != NULL) {
-
 		draw_learn_title(learn_title);
 
 		char quiz[4][100] = {0};
 		int select = 0;
 		int word_number = learn_word_number;
 
-		Word *word = load_words(learn_word_number, words, meaning);
+		Word *word = load_words(learn_word_number, &words, &meaning);
 		if (word == NULL)
 		    return;
 
@@ -126,7 +114,7 @@ void access_learn(const int learn_word_number, const char *dictionary_file_path)
 			    break;
 
 			draw_display_learn_number(display_number, word_number);
-			draw_learn_zone(learn_zone, word, quiz, words, meaning);
+			draw_learn_zone(learn_zone, word, quiz, &meaning);
 
 			if (word->correct_times > 2) {
 				char content[100] = {0};
@@ -160,12 +148,12 @@ void access_learn(const int learn_word_number, const char *dictionary_file_path)
 
 		if (word!=NULL)
 		    free_link_list(word);
+
+		clear();
+		refresh();
+
+		delwin(learn_title);
+		delwin(display_number);
+		delwin(learn_zone);
 	}
-
-	clear();
-	refresh();
-
-	delwin(learn_title);
-	delwin(display_number);
-	delwin(learn_zone);
 }

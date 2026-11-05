@@ -75,7 +75,7 @@ void access_set_dictionary(char *source_file_path,
 	WINDOW *set_dictionary_list_menu = create_window(set_dictionary_list_menu_height, set_dictionary_list_menu_width, set_dictionary_list_menu_starty, set_dictionary_list_menu_startx);
 	keypad(set_dictionary_list_menu,true);
 
-	if (set_dictionary_title != NULL && set_dictionary_list_menu) {
+	if (set_dictionary_title != NULL && set_dictionary_list_menu != NULL) {
 		int set_dictionary_select = 0, set_dictionary_index = 1;
 
 		while (1) {
@@ -103,11 +103,11 @@ void access_set_dictionary(char *source_file_path,
 				break;
 			}
 		}
+
+		clear();
+		refresh();
+
+		delwin(set_dictionary_title);
+		delwin(set_dictionary_list_menu);
 	}
-
-	clear();
-	refresh();
-
-	delwin(set_dictionary_title);
-	delwin(set_dictionary_list_menu);
 }
