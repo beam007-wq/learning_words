@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "set_dictionary.h"
-#include "common.h"
+#include "../includes/set_dictionary.h"
+#include "../includes/common.h"
 
 static int set_dictionary_file(	const char *dictionary_file_path[4],
 				const char *dictionary[4],

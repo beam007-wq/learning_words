@@ -5,11 +5,11 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "common.h"
-#include "learn.h"
-#include "review.h"
-#include "set_dictionary.h"
-#include "setting.h"
+#include "../includes/common.h"
+#include "../includes/learn.h"
+#include "../includes/review.h"
+#include "../includes/set_dictionary.h"
+#include "../includes/setting.h"
 
 void draw_dictionary(WINDOW *win, char file_name[15+1]) {
 	if (win == NULL) return;

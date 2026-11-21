@@ -1,12 +1,11 @@
 //setting.c
 
-#include "setting.h"
-#include "common.h"
-
 #include <stdlib.h>
-#include <ncurses.h>
 #include <panel.h>
 #include <locale.h>
+
+#include "../includes/setting.h"
+#include "../includes/common.h"
 
 const char *background_colors[6] = {"red", "black", "blue", "green", "yellow"};
 const char *language[2] = {"zh_CH", "en_US"};

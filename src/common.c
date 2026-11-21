@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "common.h"
+#include "../includes/common.h"
 
 #define LANGUAGE_NUM 2
 #define BACKGROUND_COLOR_KEYWORDS_NUM 6

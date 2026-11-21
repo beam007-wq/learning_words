@@ -5,8 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "common.h"
-#include "review.h"
+#include "../includes/common.h"
+#include "../includes/review.h"
 
 static void draw_review_title(WINDOW *win) {
 	if (win == NULL) return;

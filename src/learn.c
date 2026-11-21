@@ -5,8 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "common.h"
-#include "learn.h"
+#include "../includes/common.h"
+#include "../includes/learn.h"
 
 static void draw_learn_title(WINDOW *win) {
 	if (win == NULL) return;
